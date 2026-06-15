@@ -1,6 +1,6 @@
 # SQA Social Media - Testes Playwright
 
-Projeto independente da Atividade 5 para testes de caixa-preta da API e fluxos
+Projeto da Atividade 5 para testes de caixa-preta da API e fluxos
 End-to-End (E2E) em navegador real.
 
 ## Objetivo
