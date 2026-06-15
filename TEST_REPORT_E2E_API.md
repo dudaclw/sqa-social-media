@@ -1,6 +1,5 @@
 # Relatório de Testes Playwright - Atividade 5
 
-Data da execução: 15 de junho de 2026.
 
 ## 1. Escopo e estratégia
 
