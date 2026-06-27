@@ -40,9 +40,6 @@ test.describe("Cadastro, autenticação e curtida", () => {
 
       await test.step("preencher e enviar o formulário", async () => {
         await page.getByPlaceholder("seu@email.com").fill(email);
-
-        // ACESSIBILIDADE: os labels não possuem htmlFor/id; o tipo é o
-        // seletor estável disponível para diferenciar os dois campos de senha.
         const passwordFields = page.locator('input[type="password"]');
         await expect(passwordFields).toHaveCount(2);
         await passwordFields.first().fill(STRONG_PASSWORD);

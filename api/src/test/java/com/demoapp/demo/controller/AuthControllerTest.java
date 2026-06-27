@@ -38,7 +38,6 @@ class AuthControllerTest {
   @Test
   @DisplayName("Deve retornar 401 e Credenciais inválidas para senha incorreta")
   void deveRetornarNaoAutorizadoQuandoSenhaEstiverIncorreta() throws Exception {
-    // Arrange
     String email = "usuario@teste.com";
     String submittedPassword = "Errada1!";
     User existingUser = user(1L, email, "Correta1!");
@@ -49,8 +48,6 @@ class AuthControllerTest {
 
     String requestBody = objectMapper.writeValueAsString(
         java.util.Map.of("email", email, "password", submittedPassword));
-
-    // Act + Assert
     mockMvc.perform(post("/auth/signin")
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody))
@@ -68,7 +65,6 @@ class AuthControllerTest {
   @Test
   @DisplayName("Deve retornar 409 e E-mail já cadastrado para e-mail duplicado")
   void deveRetornarConflitoQuandoEmailJaEstiverCadastrado() throws Exception {
-    // Arrange
     String email = "duplicado@teste.com";
     String password = "Valida1!";
     User existingUser = user(7L, email, password);
@@ -79,8 +75,6 @@ class AuthControllerTest {
 
     String requestBody = objectMapper.writeValueAsString(
         java.util.Map.of("email", email, "password", password));
-
-    // Act
     MvcResult result = mockMvc.perform(post("/auth/signup")
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody))
@@ -88,19 +82,40 @@ class AuthControllerTest {
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.status").value(409))
         .andReturn();
-
-    // Assert
     assertEquals(1, userService.emailValidationCalls);
     assertEquals(1, userService.passwordValidationCalls);
     assertEquals(1, userService.findByEmailCalls);
     assertEquals(0, userService.createUserCalls);
 
     JsonNode response = objectMapper.readTree(result.getResponse().getContentAsString());
-
-    // BUG DOCUMENTADO: o requisito exige a mensagem "E-mail já cadastrado".
     assertThat(response.get("message").asText())
         .as("mensagem retornada para tentativa de cadastro com e-mail duplicado")
         .isEqualTo("E-mail já cadastrado");
+  }
+
+  @Test
+  @DisplayName("Deve retornar E-mail enviado com sucesso ao solicitar redefinição")
+  void deveRetornarSucessoAoSolicitarRedefinicaoDeSenha() throws Exception {
+    String email = "usuario@teste.com";
+    User existingUser = user(8L, email, "Valida1!");
+
+    userService.emailValid = true;
+    userService.foundUser = existingUser;
+
+    String requestBody = objectMapper.writeValueAsString(
+        java.util.Map.of("email", email));
+
+    mockMvc.perform(post("/auth/reset-password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody))
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").value("E-mail enviado com sucesso"));
+
+    assertEquals(1, userService.emailValidationCalls);
+    assertEquals(0, userService.passwordValidationCalls);
+    assertEquals(1, userService.findByEmailCalls);
+    assertEquals(0, userService.createUserCalls);
   }
 
   private User user(Long id, String email, String password) {

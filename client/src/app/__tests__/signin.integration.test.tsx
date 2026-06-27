@@ -58,7 +58,6 @@ describe("fluxo de login", () => {
   });
 
   test("deve autenticar, redirecionar e encerrar o carregamento", async () => {
-    // Arrange
     const user = userEvent.setup();
     const response: SignInResponse = {
       id: 10,
@@ -67,8 +66,6 @@ describe("fluxo de login", () => {
     const request = deferred<SignInResponse>();
     mockedSignIn.mockReturnValue(request.promise);
     render(<SignIn />);
-
-    // Act
     await user.type(
       screen.getByPlaceholderText("seu@email.com"),
       response.email
@@ -76,8 +73,6 @@ describe("fluxo de login", () => {
     await user.type(screen.getByPlaceholderText("••••••••"), "Senha1!forte");
     const page = within(screen.getByRole("main"));
     await user.click(page.getByRole("button", { name: "Entrar" }));
-
-    // Assert
     expect(mockedSignIn).toHaveBeenCalledWith({
       email: response.email,
       password: "Senha1!forte",

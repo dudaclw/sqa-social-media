@@ -44,9 +44,7 @@ export default function ResetPassword() {
 
     try {
       await authService.resetPassword({ email });
-      setSuccessMessage(
-        "Email enviado com sucesso para alterar a senha! Redirecionando..."
-      );
+      setSuccessMessage("E-mail enviado com sucesso");
 
       setTimeout(() => {
         router.push("/signin");

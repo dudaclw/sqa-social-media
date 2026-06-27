@@ -4,7 +4,6 @@ test.describe("Curtida sem autenticação", () => {
   test("usuário deslogado recebe alerta e permanece no feed sem curtir", async ({
     browser,
   }) => {
-    // Arrange
     const context = await browser.newContext();
     await context.clearCookies();
     await context.addInitScript(() => {
@@ -14,11 +13,8 @@ test.describe("Curtida sem autenticação", () => {
     const page = await context.newPage();
 
     try {
-      // Act
       const response = await page.goto("/");
       const initialUrl = page.url();
-
-      // Assert - estado inicial
       expect(response?.ok()).toBe(true);
       await expect(
         page.getByRole("heading", { name: "Feed de Posts" })
@@ -51,11 +47,7 @@ test.describe("Curtida sem autenticação", () => {
         dialogMessage = dialog.message();
         await dialog.accept();
       });
-
-      // Act - tentativa de curtida
       await likeButton.click();
-
-      // Assert - estado final
       expect(dialogMessage).toBe(
         "Você precisa estar autenticado para curtir posts!"
       );

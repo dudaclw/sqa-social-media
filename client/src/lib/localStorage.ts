@@ -7,7 +7,7 @@ export interface StoredUser {
 
 export function saveUser(user: StoredUser): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 }
 
@@ -34,6 +34,8 @@ export function removeUser(): void {
     localStorage.removeItem(USER_KEY);
   }
 }
+
+export const clearUser = removeUser;
 
 export function isAuthenticated(): boolean {
   return getUser() !== null;

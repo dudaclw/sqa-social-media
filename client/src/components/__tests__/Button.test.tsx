@@ -9,7 +9,6 @@ describe("Button", () => {
   });
 
   test("deve exibir carregamento, ficar desabilitado e bloquear o callback", async () => {
-    // Arrange
     const user = userEvent.setup();
     const onClick = jest.fn();
     render(
@@ -17,12 +16,8 @@ describe("Button", () => {
         Enviar
       </Button>
     );
-
-    // Act
     const button = screen.getByRole("button", { name: "Carregando..." });
     await user.click(button);
-
-    // Assert
     expect(button).toBeDisabled();
     expect(onClick).not.toHaveBeenCalled();
   });

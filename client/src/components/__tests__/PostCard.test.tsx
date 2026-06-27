@@ -14,7 +14,6 @@ describe("PostCard", () => {
   });
 
   test("deve alertar e impedir a curtida para usuário deslogado", async () => {
-    // Arrange
     const user = userEvent.setup();
     const alertMock = jest.spyOn(window, "alert").mockImplementation(() => {});
     const onLike = jest.fn<Promise<void>, [number]>();
@@ -23,18 +22,20 @@ describe("PostCard", () => {
       title: "Qualidade de software",
       body: "Testes automatizados reduzem regressões.",
       liked: false,
+      reactions: {
+        likes: 10,
+        dislikes: 2,
+      },
     };
 
     render(
       <PostCard post={post} isAuthenticated={false} onLike={onLike} />
     );
-
-    // Act
     await user.click(screen.getByRole("button", { name: /Curtir/ }));
-
-    // Assert
     expect(screen.getByText(post.title)).toBeInTheDocument();
     expect(screen.getByText(post.body)).toBeInTheDocument();
+    expect(screen.getByText("Likes: 10")).toBeInTheDocument();
+    expect(screen.getByText("Dislikes: 2")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Curtir/ })).toBeEnabled();
     expect(alertMock).toHaveBeenCalledWith(
       "Você precisa estar autenticado para curtir posts!"

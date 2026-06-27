@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Testes automatizados
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: sqa_social_media
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      API_URL: http://127.0.0.1:8080
+      FRONTEND_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_BASE_URL: http://127.0.0.1:8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/sqa_social_media?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependências da API
+        working-directory: api
+        run: ./mvnw -B -DskipTests dependency:go-offline
+
+      - name: Instalar dependências do client
+        working-directory: client
+        run: npm ci
+
+      - name: Instalar dependências dos testes Playwright
+        working-directory: tests
+        run: npm ci
+
+      - name: Executar testes do backend
+        working-directory: api
+        run: ./mvnw -B test
+
+      - name: Executar testes do frontend
+        working-directory: client
+        run: npm test -- --runInBand
+
+      - name: Instalar browsers do Playwright
+        working-directory: tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Subir API localmente
+        working-directory: api
+        run: |
+          nohup ./mvnw -B spring-boot:run > ../api.log 2>&1 &
+          echo $! > ../api.pid
+
+      - name: Aguardar API
+        run: |
+          for attempt in {1..60}; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Content-Type: application/json" \
+              -d '{"email":"invalid","password":"invalid"}' \
+              "$API_URL/auth/signin" || true)
+
+            if [ "$status" != "000" ]; then
+              echo "API disponível com HTTP $status"
+              exit 0
+            fi
+
+            echo "Aguardando API... tentativa $attempt"
+            sleep 2
+          done
+
+          echo "API não ficou disponível a tempo"
+          cat api.log
+          exit 1
+
+      - name: Subir client localmente
+        working-directory: client
+        run: |
+          nohup npm run dev > ../client.log 2>&1 &
+          echo $! > ../client.pid
+
+      - name: Aguardar client
+        run: |
+          for attempt in {1..60}; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL" || true)
+
+            if [ "$status" != "000" ]; then
+              echo "Client disponível com HTTP $status"
+              exit 0
+            fi
+
+            echo "Aguardando client... tentativa $attempt"
+            sleep 2
+          done
+
+          echo "Client não ficou disponível a tempo"
+          cat client.log
+          exit 1
+
+      - name: Executar testes Playwright de API e E2E
+        working-directory: tests
+        run: npm test
+
+      - name: Capturar logs dos serviços
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-logs
+          path: |
+            api.log
+            client.log
+            tests/test-results
+            tests/playwright-report
+          if-no-files-found: ignore

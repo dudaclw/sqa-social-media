@@ -49,7 +49,6 @@ describe("fluxo de cadastro", () => {
   });
 
   test("deve cadastrar, autenticar e redirecionar sem mensagem de erro", async () => {
-    // Arrange
     const user = userEvent.setup();
     const response: SignInResponse = {
       id: 11,
@@ -58,8 +57,6 @@ describe("fluxo de cadastro", () => {
     const password = "Senha1@forte";
     mockedSignUp.mockResolvedValue(response);
     render(<SignUp />);
-
-    // Act
     await user.type(
       screen.getByPlaceholderText("seu@email.com"),
       response.email
@@ -69,8 +66,6 @@ describe("fluxo de cadastro", () => {
     await user.type(passwordFields[1], password);
     const page = within(screen.getByRole("main"));
     await user.click(page.getByRole("button", { name: "Criar Conta" }));
-
-    // Assert
     await waitFor(() => {
       expect(mockedSignUp).toHaveBeenCalledWith({
         email: response.email,

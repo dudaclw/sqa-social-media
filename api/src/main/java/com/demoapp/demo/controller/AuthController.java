@@ -43,7 +43,7 @@ public class AuthController {
     if (service.findByEmail(userDTO.getEmail()) != null) {
       return ResponseEntity
           .status(409)
-          .body(new ErrorResponse("E-mail já está em uso", 409));
+          .body(new ErrorResponse("E-mail já cadastrado", 409));
     }
 
     User createdUser = service.createUser(userDTO.getEmail(), userDTO.getPassword());
@@ -90,7 +90,7 @@ public class AuthController {
           .body(new ErrorResponse("Usuário não encontrado", 404));
     }
 
-    return ResponseEntity.ok(Map.of("message", "Senha redefinida com sucesso (fake)"));
+    return ResponseEntity.ok(Map.of("message", "E-mail enviado com sucesso"));
   }
 
 }
